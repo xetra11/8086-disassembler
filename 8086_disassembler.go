@@ -5,7 +5,32 @@ import (
 	"os"
 )
 
-const mov_op_code = 0b1000100
+const mov_op_code = 0b10001000
+
+const reg_field_mask = 0b00111000
+
+const mod_memory_mode = 0b00
+const mod_memory_8bit = 0b01
+const mod_memory_16bit = 0b10
+const mod_reg_mode = 0b11
+
+const reg_AL_AX = 0b00000000
+const reg_CL_CX = 0b00001000
+const reg_DL_DX = 0b00010000
+const reg_BL_BX = 0b00011000
+const reg_AH_SP = 0b00100000
+const reg_CH_BP = 0b00101000
+const reg_DH_SI = 0b00110000
+const reg_BH_DI = 0b00111000
+
+const rm_AL_AX = 0b00000000
+const rm_CL_CX = 0b00000001
+const rm_DL_DX = 0b00000010
+const rm_BL_BX = 0b00000011
+const rm_AH_SP = 0b00000100
+const rm_CH_BP = 0b00000101
+const rm_DH_SI = 0b00000110
+const rm_BH_DI = 0b00000111
 
 func main() {
 
@@ -34,24 +59,18 @@ func main() {
 	// b09 := (b[1] & 0b00000010) >> 1
 	// b08 := (b[1] & 0b00000001) >> 0
 
-
-
 	opcode := (b[0] & 0b11111100)
 	// direction := (b[0] & 0b00000010)
-	// wordop := (b[0] & 0b00000001)
+	wordop := (b[0] & 0b00000001)
+	// mod := (b[1] & 0b11000000)
+	reg := (b[1] & reg_field_mask)
+	rm := (b[1] & 0b00000111)
+	reg_addr := eval_register_name(reg, wordop)
+	rm_addr := eval_rm_name(rm, wordop)
 
-	if (opcode == mov_op_code) {
-		fmt.Print("mov")
+	if opcode == mov_op_code {
+		fmt.Printf("mov %s, %s", reg_addr, rm_addr)
 	}
-
-
-
-	
-
-
-
-
-	
 
 	//////////////////////////////////
 	// fmt.Printf("%b", b7)	        //
@@ -81,6 +100,54 @@ func main() {
 	// }					 //
 	// fmt.Println()			 //
 	///////////////////////////////////////////
+}
+
+func eval_register_name(reg byte, wordop byte) string {
+	register_prefix := ""
+	register_full := ""
+
+	switch {
+	case reg == reg_AL_AX:
+		register_prefix = "A"
+	case reg == reg_CL_CX:
+		register_prefix = "C"
+	case reg == reg_DL_DX:
+		register_prefix = "D"
+	case reg == reg_BL_BX:
+		register_prefix = "B"
+	}
+
+	if wordop == 0b0 {
+		register_full = register_prefix + "L"
+	} else {
+		register_full = register_prefix + "X"
+	}
+
+	return register_full
+}
+
+func eval_rm_name(rm byte, wordop byte) string {
+	register_prefix := ""
+	register_full := ""
+
+	switch {
+	case rm == rm_AL_AX:
+		register_prefix = "A"
+	case rm == rm_CL_CX:
+		register_prefix = "C"
+	case rm == rm_DL_DX:
+		register_prefix = "D"
+	case rm == rm_BL_BX:
+		register_prefix = "B"
+	}
+
+	if wordop == 0b0 {
+		register_full = register_prefix + "L"
+	} else {
+		register_full = register_prefix + "X"
+	}
+
+	return register_full
 }
 
 func check(error error) {
